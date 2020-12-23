@@ -40,7 +40,7 @@
  * This object can control the power delivered to an AC load using a triac and a zero cross circuit.
  */
 
-class Dimmer {
+class Dimmer : public Ticker {
   public:
     /**
      * Constructor.

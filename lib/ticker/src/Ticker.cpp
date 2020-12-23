@@ -35,21 +35,10 @@ Ticker::Ticker(fptr callback, uint32_t timer, uint32_t repeat, resolution_t reso
 	counts = 0;
 	}
 
-Ticker::Ticker(dimmerfptr callback, uint32_t timer, uint32_t repeat, resolution_t resolution) {
-	this->resolution = resolution;
-	if (resolution == MICROS) timer = timer * 1000;
-	this->timer = timer;
-	this->repeat = repeat;
-	this->dimmercallback = callback;
-	enabled = false;
-	lastTime = 0;
-	counts = 0;
-	}
-
 Ticker::~Ticker() {}
 
 void Ticker::start() {
-	if (callback == nullptr && dimmercallback == nullptr) return;
+	if (callback == nullptr) return;
 	if (resolution == MILLIS) lastTime = millis();
 	else lastTime = micros();
 	enabled = true;
@@ -58,7 +47,7 @@ void Ticker::start() {
 	}
 
 void Ticker::resume() {
-	if (callback == nullptr && dimmercallback == nullptr) return;
+	if (callback == nullptr) return;
 	if (resolution == MILLIS) lastTime = millis() - diffTime;
 	else lastTime = micros() - diffTime;
 	if (status == STOPPED) counts = 0;
@@ -80,10 +69,7 @@ void Ticker::pause() {
 	}
 
 void Ticker::update() {
-	if (tick()) {
-		if (callback != nullptr) callback();
-		if (dimmercallback != nullptr) ((Ticker*)this)->Ticker::dimmercallback();
-		}
+	if (tick()) callback();
 	}
 
 bool Ticker::tick() {

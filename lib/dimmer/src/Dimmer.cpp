@@ -63,7 +63,6 @@ void zeroCross() {
 
 void callTriac() {
 
-
 }
 
 // Constructor
@@ -84,7 +83,8 @@ Dimmer::Dimmer(uint8_t pin, uint8_t mode, double rampTime, uint8_t freq) :
     triacPinMasks[dimmerIndex] = digitalPinToBitMask(pin);
     if (mode == DIMMER_RAMP) {
       setRampTime(rampTime);
-    }
+    },
+  Ticker ticker
   }
 }
 

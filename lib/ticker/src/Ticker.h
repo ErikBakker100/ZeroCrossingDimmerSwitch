@@ -46,9 +46,6 @@ enum status_t {STOPPED, RUNNING, PAUSED};
 
 using fptr = void (*)();
 
-template<class T>
-using dimmerfptr = void (T::*)(T*);
-
 class Ticker {
 
 public:
@@ -62,7 +59,6 @@ public:
 	 *
 	 */
 	Ticker(fptr callback, uint32_t timer, uint32_t repeat = 0, resolution_t resolution = MICROS);
-	Ticker(ptf->dimmerfptr() callback, uint32_t timer, uint32_t repeat = 0, resolution_t resolution = MICROS);
 
 	/** destructor for the Ticker object
 	 *
@@ -130,7 +126,7 @@ private:
 	uint32_t counts;
 	status_t status;
 	fptr callback{nullptr};
-	dimmerfptr dimmercallback{nullptr};
+	fptr dimmercallback;
 	uint32_t lastTime;
 	uint32_t diffTime;
 };
