@@ -7,15 +7,16 @@
 
 #pragma once
 
+#include "Ticker.h"
 /**
  * Maximum number of triacs that can be used. Can be decreased to save RAM.
  */
 #define DIMMER_MAX_TRIAC 1
 
 /**
- * Timer to use for control of triac timing.
+ * Time to trigger a Triac in micro seconds
  */
-#define DIMMER_TIMER 2
+#define DIMMER_TRIGGER 10
 
 /**
  * Zero cross circuit settings.
@@ -138,13 +139,10 @@ class Dimmer {
     uint16_t rampCounter;
     uint16_t rampCycles;
     uint8_t acFreq;
-    uint8_t pulseCount;
-    uint8_t pulsesUsed;
-    uint64_t pulsesHigh;
-    uint64_t pulsesLow;
+    Ticker* triggertimer{nullptr};
+    Ticker* pwmtimer{nullptr};
 
-    void zeroCross();
-
-    friend void callTriac();
-    friend void callZeroCross();
+    friend void zeroCross(); // function to start wait time as set by triacTimes
+    friend void callTriac(); // function to start Triac trigger
+    friend void callZeroCross(); // triggered when zero crossing is detected
 };
