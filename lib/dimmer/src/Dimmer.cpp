@@ -25,7 +25,7 @@ static bool zerocrossiscalled{false}; // If zerocross is detected and handled th
 // Zero cross interrupt
 void ICACHE_RAM_ATTR callZeroCross() {
   sei(); // enable nested interrupts so that the timer can be updated while this ISR is executed
-  if((millis() - sincelastCrossing > 5) {// It can not be a bounce because of the amount of time passed, this is the first time
+  if(millis() - sincelastCrossing > 5) {// It can not be a bounce because of the amount of time passed, this is the first time
     zerocrossiscalled = false; 
     sincelastCrossing = millis();
   }
@@ -39,7 +39,9 @@ void ICACHE_RAM_ATTR callZeroCross() {
 
   // Process each registered dimmer object
   for (uint8_t i = 0; i < dimmerCount; i++) {
-    dimmers[i]->zeroCross());
+    dimmers[i]->zeroCross();
+    // If triac time was already reached, activate it
+    if (dimmers[i]->pwmtimer->elapsed() >= triacTimes[i]) *triacPinPorts[i] |= triacPinMasks[i];
   }
 }
 
@@ -68,8 +70,8 @@ Dimmer::Dimmer(uint8_t pin, uint8_t mode, double rampTime, uint8_t freq) :
 void Dimmer::begin(uint8_t value, bool on) {
   // Initialize lamp state and value
   set(value, on);
-  pwmtimer = new Ticker(std::bind(&Dimmer::zeroCross, this), lampValue, 1, MILLIS);
-  triggertimer = new Ticker(std::bind(&Dimmer::callTriac, this), DIMMER_TRIGGER, 1);
+  pwmtimer = new Ticker(std::bind(&Dimmer::callTriac, this), lampValue, 1, MILLIS);
+  triggertimer = new Ticker(std::bind(&Dimmer::killTriac, this), DIMMER_TRIGGER, 1);
 
   // Initialize triac pin
   pinMode(triacPin, OUTPUT);
@@ -87,23 +89,23 @@ void Dimmer::begin(uint8_t value, bool on) {
 
 void Dimmer::off() {
   lampState = false;
-}
+  }
 
 void Dimmer::on() {
   lampState = true;
-}
+  }
 
 void Dimmer::toggle() {
   lampState = !lampState;
-}
+  }
 
 bool Dimmer::getState() {
   return lampState;
-}
+  }
 
 uint8_t Dimmer::getValue() {
   return rampStartValue + ((int32_t) lampValue - rampStartValue) * rampCounter / rampCycles;
-}
+  }
 
 void Dimmer::set(uint8_t value) {
   if (value > 100) {
@@ -129,30 +131,31 @@ void Dimmer::set(uint8_t value) {
 void Dimmer::set(uint8_t value, bool on) {
   set(value);
   lampState = on;
-}
+  }
 
 void Dimmer::setMinimum(uint8_t value) {
   if (value > 100) {
     value = 100;
-  }
+    }
   minValue = value;
   if (lampValue < minValue) {
     set(value);
+    }
   }
-}
 
 void Dimmer::setRampTime(double rampTime) {
   rampTime = rampTime * 2 * acFreq;
   rampCycles = rampTime > 0xFFFF ? 0xFFFF : rampTime;
   rampCounter = rampCycles;
-}
+  }
 
-void Dimmer::update(){
+void Dimmer::update() {
   pwmtimer->update();
   triggertimer->update();
-}
+  }
 
 void Dimmer::zeroCross() {
+  // can be called by zero crossing detector.
   if (operatingMode == DIMMER_COUNT) {
     // Remove MSB from buffer and decrement pulse count accordingly
     if (pulseCount > 0 && (pulsesHigh & (1ULL << 35))) {
@@ -161,7 +164,6 @@ void Dimmer::zeroCross() {
         pulseCount--;
       }
     }
-
     // Shift 100-bit buffer to the right
     pulsesHigh <<= 1;
     if (pulsesLow & (1ULL << 63)) {
@@ -170,32 +172,39 @@ void Dimmer::zeroCross() {
     pulsesLow <<= 1;
 
   // Turn next half cycle on if number of pulses is low within the used buffer
-    if (lampValue > DIMMER_PULSES_TO_VALUE(pulseCount, pulsesUsed)) {
-      // Turn dimmer on at zero crossing time, @10 ticks (500us)
-      triacTimes[dimmerIndex] = 10;
+    if (lampValue > ((uint16_t)(pulseCount)*100 / (pulsesUsed))) {
+          // Turn dimmer on at zero crossing time, @10 ticks (500us)
+          triacTimes[dimmerIndex] = 10;
       pulsesLow++;
       pulseCount++;
     }
-
     // Update number of bits used in the buffer
     if (pulsesUsed < 100) {
       pulsesUsed++;
     }
-
   } else {
-// Calculate triac time for the current cycle
-  uint8_t value = getValue();
-  if (value > 0 && lampState) {
-    triacTimes[dimmerIndex] = pgm_read_byte(&powerToTicks[value - 1]);
+    // Calculate triac time for the current cycle
+    uint8_t value = getValue();
+    if (value > 0 && lampState) {
+      uint16_t halfcycletime = 500 / acFreq; // 1sec/freq / 2 = 1000msec/2 / freq
+      triacTimes[dimmerIndex] = halfcycletime-(value/halfcycletime); // Wait time before triggering the Triac
+      pwmtimer->interval(triacTimes[dimmerIndex]);
+    }
+
+    // Increment the ramp counter until it reaches the total number of cycles for the ramp
+    if (operatingMode == DIMMER_RAMP && rampCounter < rampCycles) {
+      rampCounter++;
+    }
+  }
+  pwmtimer->start();
   }
 
-  // Increment the ramp counter until it reaches the total number of cycles for the ramp
-  if (operatingMode == DIMMER_RAMP && rampCounter < rampCycles) {
-    rampCounter++;
-  }
+void Dimmer::callTriac() {
+   * triacPinPorts[dimmerIndex] |= triacPinMasks[dimmerIndex]; // Trigger Triac gate
+  triacTimes[dimmerIndex] = 255;
   triggertimer->start();
   }
-void Dimmer::callTriac() {
+
+void Dimmer::killTriac() {
   *triacPinPorts[dimmerIndex] &= ~triacPinMasks[dimmerIndex];
-  triacTimes[dimmerIndex] = 255;
   }

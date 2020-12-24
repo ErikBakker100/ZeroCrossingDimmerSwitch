@@ -155,6 +155,7 @@ class Dimmer {
 
     void zeroCross(); // function to start wait time as set by triacTimes
     void callTriac(); // function to start Triac trigger
+    void killTriac(); // stop trigger
 
     friend void callZeroCross(); // triggered when zero crossing is detected
 };
