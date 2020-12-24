@@ -44,7 +44,7 @@ enum resolution_t {MICROS, MILLIS, MICROS_MICROS};
  */
 enum status_t {STOPPED, RUNNING, PAUSED};
 
-using fptr = void (*)();
+using fptr = std::function<void()>;
 
 class Ticker {
 
@@ -126,7 +126,6 @@ private:
 	uint32_t counts;
 	status_t status;
 	fptr callback{nullptr};
-	fptr dimmercallback;
 	uint32_t lastTime;
 	uint32_t diffTime;
 };

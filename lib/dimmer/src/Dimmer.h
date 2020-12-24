@@ -40,7 +40,7 @@
  * This object can control the power delivered to an AC load using a triac and a zero cross circuit.
  */
 
-class Dimmer : public Ticker {
+class Dimmer {
   public:
     /**
      * Constructor.
@@ -127,6 +127,13 @@ class Dimmer : public Ticker {
      */
     void setRampTime(double rampTime);
 
+    /**
+     * 
+     * Updates the timers, and call function when finisched
+     * 
+     */
+    void update(); // check timers
+
   private:
     static bool started;
     uint8_t dimmerIndex;
@@ -139,10 +146,15 @@ class Dimmer : public Ticker {
     uint16_t rampCounter;
     uint16_t rampCycles;
     uint8_t acFreq;
+    uint8_t pulseCount;
+    uint8_t pulsesUsed;
+    uint64_t pulsesHigh;
+    uint64_t pulsesLow;    
     Ticker* triggertimer{nullptr};
     Ticker* pwmtimer{nullptr};
 
-    friend void zeroCross(); // function to start wait time as set by triacTimes
-    friend void callTriac(); // function to start Triac trigger
+    void zeroCross(); // function to start wait time as set by triacTimes
+    void callTriac(); // function to start Triac trigger
+
     friend void callZeroCross(); // triggered when zero crossing is detected
 };
