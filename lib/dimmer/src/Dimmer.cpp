@@ -24,7 +24,6 @@ static bool zerocrossiscalled{false}; // If zerocross is detected and handled th
 
 // Zero cross interrupt
 void ICACHE_RAM_ATTR callZeroCross() {
-  sei(); // enable nested interrupts so that the timer can be updated while this ISR is executed
   if(millis() - sincelastCrossing > 5) {// It can not be a bounce because of the amount of time passed, this is the first time
     zerocrossiscalled = false; 
     sincelastCrossing = millis();
@@ -157,13 +156,17 @@ void Dimmer::update() {
 void Dimmer::zeroCross() {
   // can be called by zero crossing detector.
   if (operatingMode == DIMMER_COUNT) {
+    /* Dimmer Count mode Use count mode to switch the load on and off only when the AC voltage crosses zero. In this
+      * mode, the power is controlled by turning the triac on only for complete (half) cycles of the AC
+      * sine wave. The power delivery is adjusted by counting the number of cycles that are activated.
+      * This helps controlling higher, slower response loads (e.g. resistances) without introducing
+      * any triac switching noise on the line.
+      */
     // Remove MSB from buffer and decrement pulse count accordingly
-    if (pulseCount > 0 && (pulsesHigh & (1ULL << 35))) {
-      pulsesHigh &= ~(1ULL << 35);
-      if (pulseCount > 0) {
-        pulseCount--;
-      }
-    }
+    if (pulseCount > 0)
+ {
+   pulseCount--;
+ }
     // Shift 100-bit buffer to the right
     pulsesHigh <<= 1;
     if (pulsesLow & (1ULL << 63)) {
