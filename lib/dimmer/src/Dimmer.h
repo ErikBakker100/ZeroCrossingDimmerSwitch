@@ -138,6 +138,7 @@ class Dimmer {
     static bool started;
     uint8_t dimmerIndex;
     uint8_t triacPin;
+    uint16_t triacTime;
     uint8_t operatingMode;
     bool lampState;
     uint8_t lampValue;
@@ -146,7 +147,7 @@ class Dimmer {
     uint16_t rampCounter;
     uint16_t rampCycles;
     uint8_t acFreq;
-    uint8_t pulseCount;
+    uint8_t pulseCount; // Amount of zero crossings
     uint8_t pulsesUsed;
     uint64_t pulsesHigh;
     uint64_t pulsesLow;    
