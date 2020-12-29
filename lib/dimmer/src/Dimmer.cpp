@@ -13,8 +13,8 @@ static Dimmer* dimmers[DIMMER_MAX_TRIAC]{nullptr};     // Pointers to all regist
 static uint8_t dimmerCount{0};                // Number of registered dimmer objects
 
 // Triac pin and timing variables. Using global arrays to make ISR fast.
-static volatile uint32_t* triacPinPorts[DIMMER_MAX_TRIAC]{0}; // Triac ports for registered dimmers
-static uint8_t triacPinMasks[DIMMER_MAX_TRIAC]{0};           // Triac pin mask for registered dimmers
+//static volatile uint32_t* triacPinPorts[DIMMER_MAX_TRIAC]{0}; // Triac ports for registered dimmers
+//static uint8_t triacPinMasks[DIMMER_MAX_TRIAC]{0};           // Triac pin mask for registered dimmers
 
 // Global state variables
 bool Dimmer::started{false}; // At least one dimmer has started
@@ -28,11 +28,6 @@ void ICACHE_RAM_ATTR callZeroCross() {
     sincelastCrossing = micros();  }
   if(zerocrossiscalled) return; // If we have run this IRS before it must be a bounce
   zerocrossiscalled = true; // Remember that we have run this ISR before
-  // Turn off all triacs and disable further triac activation before anything else
-  for (uint8_t i = 0; i < dimmerCount; i++) {
-    *triacPinPorts[i] &= ~triacPinMasks[i]; // invert the pin mask (so our pin is 0 and the remainder of bits is 1) then 'AND' with the content (dereferenced port address, because of * operator) so in effect the pin is 0
-  }
-
   // Process each registered dimmer object
   for (uint8_t i = 0; i < dimmerCount; i++) {
     dimmers[i]->zeroCross();
@@ -58,8 +53,8 @@ Dimmer::Dimmer(uint8_t pin, uint8_t mode, double rampTime, uint8_t freq) :
       // Register dimmer object being created
       dimmerIndex = dimmerCount;
       dimmers[dimmerCount++] = this;
-      triacPinPorts[dimmerIndex] = portOutputRegister(digitalPinToPort(pin)); // digitalPinToPort retuns the port number 'pin' lives is. portOutputRegister returns the address of that specific port 
-      triacPinMasks[dimmerIndex] = digitalPinToBitMask(pin); //set only the bit corresponding to that pin.
+      triacPinPort = portOutputRegister(digitalPinToPort(pin)); // digitalPinToPort retuns the port number 'pin' lives is. portOutputRegister returns the address of that specific port 
+      triacPinMask = digitalPinToBitMask(pin); //set only the bit corresponding to that pin.
     }
     if (mode == DIMMER_RAMP) {
       setRampTime(rampTime);
@@ -69,8 +64,8 @@ Dimmer::Dimmer(uint8_t pin, uint8_t mode, double rampTime, uint8_t freq) :
 void Dimmer::begin(uint8_t value, bool on) {
   // Initialize lamp state and value
   set(value, on);
-  pwmtimer = new Ticker(std::bind(&Dimmer::callTriac, this), lampValue, 1, MICROS);
-  triggertimer = new Ticker(std::bind(&Dimmer::killTriac, this), DIMMER_TRIGGER, 1, MICROS);
+  pwmtimer = new Ticker(std::bind(&Dimmer::callTriac, this), lampValue, 1, MICROS_MICROS);
+  triggertimer = new Ticker(std::bind(&Dimmer::killTriac, this), DIMMER_TRIGGER, 1, MICROS_MICROS);
 
   // Initialize triac pin
   pinMode(triacPin, OUTPUT);
@@ -154,6 +149,7 @@ void Dimmer::update() {
   }
 
 void ICACHE_RAM_ATTR Dimmer::zeroCross() {
+  *triacPinPort &= ~triacPinMask; // Reset Triac gate
   // can be called by zero crossing detector.
   if (operatingMode == DIMMER_COUNT) {
     /* Dimmer Count mode Use count mode to switch the load on and off only when the AC voltage crosses zero. In this
@@ -208,12 +204,13 @@ void ICACHE_RAM_ATTR Dimmer::zeroCross() {
   }
 
 void Dimmer::callTriac() {
-  Serial.println("Trig");
-  * triacPinPorts[dimmerIndex] |= triacPinMasks[dimmerIndex]; // Trigger Triac gate
+//  *triacPinPorts[dimmerIndex] &= ~triacPinMasks[dimmerIndex];
+  *triacPinPort |= triacPinMask; // Reset Triac gate
   triacTime = 255;
   triggertimer->start();
   }
 
 void Dimmer::killTriac() {
-  *triacPinPorts[dimmerIndex] &= ~triacPinMasks[dimmerIndex];
+  //*triacPinPorts[dimmerIndex] |= triacPinMasks[dimmerIndex]; // Trigger Triac gate
+  *triacPinPort &= ~triacPinMask; // Reset Triac gate
   }

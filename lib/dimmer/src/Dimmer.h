@@ -153,6 +153,8 @@ class Dimmer {
     uint64_t pulsesLow;    
     Ticker* triggertimer{nullptr};
     Ticker* pwmtimer{nullptr};
+    volatile uint32_t* triacPinPort;
+    uint8_t triacPinMask;
 
     void zeroCross(); // function to start wait time as set by triacTimes
     void callTriac(); // function to start Triac trigger
