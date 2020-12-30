@@ -17,7 +17,7 @@ void setup() {
   Serial.println("\r\nInitialising");
   pinMode(Led1, OUTPUT);
   Sw1.attachClick([](){Handleswitch();});
-  dimmer.begin(75);
+  dimmer.begin(90);
 }
 
 void loop() {

@@ -19,6 +19,11 @@
 #define DIMMER_TRIGGER 10
 
 /**
+ * Triac control is high (HIGH) to turn Triac off, or low (LOW) to turn Triac off, depends on hardware setup 
+ */
+#define TRIAC_NORMAL_STATE HIGH
+
+/**
  * Zero cross circuit settings.
  *
  * @param DIMMER_ZERO_CROSS_PIN Change this parameter to the pin your zero cross circuit is attached.
@@ -153,8 +158,6 @@ class Dimmer {
     uint64_t pulsesLow;    
     Ticker* triggertimer{nullptr};
     Ticker* pwmtimer{nullptr};
-    volatile uint32_t* triacPinPort;
-    uint8_t triacPinMask;
 
     void zeroCross(); // function to start wait time as set by triacTimes
     void callTriac(); // function to start Triac trigger
