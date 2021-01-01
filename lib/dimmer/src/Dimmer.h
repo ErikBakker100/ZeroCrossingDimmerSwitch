@@ -16,12 +16,12 @@
 /**
  * Time to trigger a Triac in micro seconds
  */
-#define DIMMER_TRIGGER 10
+#define DIMMER_TRIGGER 250
 
 /**
- * Triac control is high (HIGH) to turn Triac off, or low (LOW) to turn Triac off, depends on hardware setup 
+ * Triac control is either high (HIGH) or low (LOW) to turn Triac off, depends on hardware setup 
  */
-#define TRIAC_NORMAL_STATE HIGH
+#define TRIAC_NORMAL_STATE LOW
 
 /**
  * Zero cross circuit settings.

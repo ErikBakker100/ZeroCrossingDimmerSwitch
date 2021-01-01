@@ -16,8 +16,9 @@ void setup() {
   delay(300);
   Serial.println("\r\nInitialising");
   pinMode(Led1, OUTPUT);
+  pinMode(TRIACPIN, OUTPUT);
   Sw1.attachClick([](){Handleswitch();});
-  dimmer.begin(90);
+  dimmer.begin(0);
 }
 
 void loop() {
@@ -27,7 +28,8 @@ void loop() {
 }
 
 void Handleswitch() {
-  digitalWrite(Led1, status=!status);
+  status=!status;
+  digitalWrite(Led1, status);
   status?dimmer.on():dimmer.off();
   Serial.println(status);
 }
