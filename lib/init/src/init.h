@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <OneButton.h>
-#include "Dimmer.h"
+#include "Ticker.h"
 
 #ifndef DEBUGGING
 #define DEBUGGING(...) Serial.println( __VA_ARGS__ )
