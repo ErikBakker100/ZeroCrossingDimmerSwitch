@@ -16,7 +16,7 @@
 /**
  * Time to trigger a Triac in micro seconds
  */
-#define DIMMER_TRIGGER 250
+#define DIMMER_TRIGGER 200
 
 /**
  * Triac control is either high (HIGH) or low (LOW) to turn Triac off, depends on hardware setup 
@@ -156,7 +156,7 @@ class Dimmer {
     uint8_t pulsesUsed;
     uint64_t pulsesHigh;
     uint64_t pulsesLow;    
-    Ticker* triggertimer{nullptr};
+//    Ticker* triggertimer{nullptr};
     Ticker* pwmtimer{nullptr};
 
     void zeroCross(); // function to start wait time as set by triacTimes

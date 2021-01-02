@@ -19,7 +19,7 @@ static bool zerocrossiscalled{false}; // If zerocross is detected and handled th
 
 // Zero cross interrupt
 void ICACHE_RAM_ATTR callZeroCross() {
-  if(micros() - sincelastCrossing > 3000) {// It can not be a bounce because of the amount of time passed, this must be the first time
+  if(micros() - sincelastCrossing > 5000) {// It can not be a bounce because of the amount of time passed, this must be the first time
     zerocrossiscalled = false;
     sincelastCrossing = micros();  }
   if(zerocrossiscalled) return; // If we have run this IRS before it must be a bounce
@@ -62,7 +62,7 @@ void Dimmer::begin(uint8_t value, bool on) {
   // Initialize lamp state and value
   set(value, on);
   pwmtimer = new Ticker(std::bind(&Dimmer::callTriac, this), lampValue, 1, MICROS_MICROS);
-  triggertimer = new Ticker(std::bind(&Dimmer::killTriac, this), DIMMER_TRIGGER, 1, MICROS_MICROS);
+//  triggertimer = new Ticker(std::bind(&Dimmer::killTriac, this), DIMMER_TRIGGER, 1, MICROS_MICROS);
 
   if (!started) {
     Serial.println("Dimmer::begin");
@@ -138,11 +138,11 @@ void Dimmer::setRampTime(double rampTime) {
 
 void Dimmer::update() {
   pwmtimer->update();
-  triggertimer->update();
+//  triggertimer->update();
   }
 
 void ICACHE_RAM_ATTR Dimmer::zeroCross() {
-//  digitalWrite(triacPin, TRIAC_NORMAL_STATE); // Reset Triac gate
+  digitalWrite(triacPin, !TRIAC_NORMAL_STATE); // Reset Triac gate
   // can be called by zero crossing detector.
   if (operatingMode == DIMMER_COUNT) {
     /* Dimmer Count mode Use count mode to switch the load on and off only when the AC voltage crosses zero. In this
@@ -198,7 +198,7 @@ void ICACHE_RAM_ATTR Dimmer::zeroCross() {
 
 void Dimmer::callTriac() {
   digitalWrite(triacPin, TRIAC_NORMAL_STATE); // Reset Triac gate
-  triggertimer->start();
+  //triggertimer->start();
   }
 
 void Dimmer::killTriac() {
