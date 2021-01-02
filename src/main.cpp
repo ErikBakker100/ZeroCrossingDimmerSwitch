@@ -16,7 +16,6 @@ void setup() {
   delay(300);
   Serial.println("\r\nInitialising");
   pinMode(Led1, OUTPUT);
-  pinMode(TRIACPIN, OUTPUT);
   Sw1.attachClick([](){Handleswitch();});
   dimmer.begin(0);
 }
@@ -24,6 +23,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   Sw1.tick();
+  dimmer.set(analogRead(A0)/10);
   dimmer.update();
 }
 

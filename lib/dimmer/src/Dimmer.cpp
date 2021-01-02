@@ -185,7 +185,6 @@ void ICACHE_RAM_ATTR Dimmer::zeroCross() {
     if (value > 0 && lampState) {
       uint16_t halfcycletime = 500000 / acFreq; // 1sec/freq/2 = 1000000usec/2/ freq
       triacTime = halfcycletime-(value*halfcycletime/100); // Wait time before triggering the Triac
-      Serial.println(triacTime);
       pwmtimer->interval(triacTime);
     }
     // Increment the ramp counter until it reaches the total number of cycles for the ramp
