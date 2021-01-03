@@ -34,8 +34,8 @@ void ICACHE_RAM_ATTR callZeroCross() {
 Dimmer::Dimmer(uint8_t pin, uint8_t mode, double rampTime, uint8_t freq) :
   triacPin(pin),
   operatingMode(mode),
-  lampState(false),
   lampValue(0),
+  maxValue(100),
   rampStartValue(0),
   rampCounter(1),
   rampCycles(1),
@@ -55,13 +55,13 @@ Dimmer::Dimmer(uint8_t pin, uint8_t mode, double rampTime, uint8_t freq) :
     }
   }
 
-void Dimmer::begin(uint8_t value, bool on) {
+void Dimmer::begin(uint8_t value) {
   // Initialize triac pin
   pinMode(triacPin, OUTPUT);
   digitalWrite(triacPin, TRIAC_NORMAL_STATE); // Turn Triac off to start with
   // Initialize lamp state and value
-  set(value, on);
-  pwmtimer = new Ticker(std::bind(&Dimmer::callTriac, this), lampValue, 1, MICROS_MICROS);
+  set(value);
+  pwmtimer = new Ticker(std::bind(&Dimmer::callTriac, this), 0, 1, MICROS_MICROS);
 
   if (!started) {
     Serial.println("Dimmer::begin");
@@ -76,20 +76,21 @@ void Dimmer::begin(uint8_t value, bool on) {
 
 void Dimmer::off() {
   rampCounter = 0;
-  lampState = false;
+  lampValue = minValue;
   }
 
 void Dimmer::on() {
   rampCounter = 0;
-  lampState = true;
+  lampValue = maxValue;
   }
 
 void Dimmer::toggle() {
-  lampState = !lampState;
+  (lampValue == maxValue)?off():on();
   }
 
 bool Dimmer::getState() {
-  return lampState;
+  if (lampValue) return true;
+  return false;
   }
 
 uint8_t Dimmer::getValue() {
@@ -113,21 +114,17 @@ void Dimmer::set(uint8_t value) {
       pulseCount = 0;
       pulsesUsed = 0;
     }
-    lampValue = value;
   }
+  maxValue = value;
+  lampValue = maxValue;
 }
-
-void Dimmer::set(uint8_t value, bool on) {
-  set(value);
-  lampState = on;
-  }
 
 void Dimmer::setMinimum(uint8_t value) {
   if (value > 100) {
     value = 100;
     }
   minValue = value;
-  if (lampValue < minValue) {
+  if (maxValue < minValue) {
     set(value);
     }
   }
@@ -184,7 +181,7 @@ void ICACHE_RAM_ATTR Dimmer::zeroCross() {
   } else {
     // Calculate triac time for the current cycle
     uint8_t value = getValue();
-    if (value > 0 && lampState) {
+    if (value) {
       triacTime = halfcycletime-(value*halfcycletime/100); // Wait time before triggering the Triac
       pwmtimer->interval(triacTime);
       pwmtimer->start();

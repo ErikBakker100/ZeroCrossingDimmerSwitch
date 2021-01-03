@@ -71,7 +71,7 @@ class Dimmer {
      * @param value initial intensity of the lamp, as a percentage. Minimum is 0, maximum is 100 and default is 0.
      * @param on initial lamp state. True if lamp is on or false if it's off. Lamp is on by default.
      */
-    void begin(uint8_t value = 0, bool on = true);
+    void begin(uint8_t value = 0);
 
     /**
      * Turns the lamp OFF.
@@ -110,14 +110,6 @@ class Dimmer {
     void set(uint8_t value);
 
     /**
-     * Sets the value and the state of the lamp.
-     *
-     * @param value value (intensity) of the lamp. Accepts values from 0 to 100.
-     * @param on state of the lamp. True turns lamp on, false turns lamp off.
-     */
-    void set(uint8_t value, bool on);
-
-    /**
      * Sets the mimimum acceptable power level. This is useful to control loads that cannot be
      * dimmed to a very low level, like dimmable LED or CFL lamps.
      *
@@ -145,9 +137,8 @@ class Dimmer {
     uint8_t triacPin;
     uint16_t triacTime;
     uint8_t operatingMode;
-    bool lampState;
-    uint8_t setValue;
     uint8_t lampValue;
+    uint8_t maxValue;
     uint8_t minValue;
     uint8_t rampStartValue;
     uint16_t rampCounter;
