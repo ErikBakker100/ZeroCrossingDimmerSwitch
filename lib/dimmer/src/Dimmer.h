@@ -146,22 +146,22 @@ class Dimmer {
     uint16_t triacTime;
     uint8_t operatingMode;
     bool lampState;
+    uint8_t setValue;
     uint8_t lampValue;
     uint8_t minValue;
     uint8_t rampStartValue;
     uint16_t rampCounter;
     uint16_t rampCycles;
     uint8_t acFreq;
+    uint16_t halfcycletime;
     uint8_t pulseCount; // Amount of zero crossings
     uint8_t pulsesUsed;
     uint64_t pulsesHigh;
     uint64_t pulsesLow;    
-//    Ticker* triggertimer{nullptr};
     Ticker* pwmtimer{nullptr};
 
     void zeroCross(); // function to start wait time as set by triacTimes
-    void callTriac(); // function to start Triac trigger
-    void killTriac(); // stop trigger
+    void callTriac(); // trigger Triac
 
     friend void callZeroCross(); // triggered when zero crossing is detected
 };

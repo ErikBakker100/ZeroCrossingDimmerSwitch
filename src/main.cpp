@@ -6,9 +6,8 @@ const uint8_t GPIO4{4};
 const uint8_t TRIACPIN{12};
 bool status{false};
 OneButton Sw1(SW1, true);
-Dimmer dimmer(TRIACPIN);
+Dimmer dimmer(TRIACPIN, DIMMER_RAMP, 5, 50);
 void Handleswitch();
-//void ICACHE_RAM_ATTR cross();
 
 void setup() {
   // put your setup code here, to run once:
@@ -16,8 +15,10 @@ void setup() {
   delay(300);
   Serial.println("\r\nInitialising");
   pinMode(Led1, OUTPUT);
+
+  
   Sw1.attachClick([](){Handleswitch();});
-  dimmer.begin(0);
+  dimmer.begin(50);
 }
 
 void loop() {
@@ -30,6 +31,6 @@ void loop() {
 void Handleswitch() {
   status=!status;
   digitalWrite(Led1, status);
-  status?dimmer.on():dimmer.off();
+  dimmer.toggle();
   Serial.println(status);
 }

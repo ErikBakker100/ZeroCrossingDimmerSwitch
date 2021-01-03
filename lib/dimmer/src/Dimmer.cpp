@@ -14,7 +14,7 @@ static uint8_t dimmerCount{0};                // Number of registered dimmer obj
 
 // Global state variables
 bool Dimmer::started{false}; // At least one dimmer has started
-static volatile uint32_t sincelastCrossing{0}; // Record how many millis(0 have passed since last Zero Crossing detection, used for debouncing zero crossing circuit and to calculate when triac needs to be fired.
+static volatile uint32_t sincelastCrossing{0}; // Record how many micros have passed since last Zero Crossing detection, used for debouncing zero crossing circuit and to calculate when triac needs to be fired.
 static bool zerocrossiscalled{false}; // If zerocross is detected and handled the first time we should not handle again till next crossing
 
 // Zero cross interrupt
@@ -62,7 +62,6 @@ void Dimmer::begin(uint8_t value, bool on) {
   // Initialize lamp state and value
   set(value, on);
   pwmtimer = new Ticker(std::bind(&Dimmer::callTriac, this), lampValue, 1, MICROS_MICROS);
-//  triggertimer = new Ticker(std::bind(&Dimmer::killTriac, this), DIMMER_TRIGGER, 1, MICROS_MICROS);
 
   if (!started) {
     Serial.println("Dimmer::begin");
@@ -71,14 +70,17 @@ void Dimmer::begin(uint8_t value, bool on) {
     attachInterrupt(digitalPinToInterrupt(DIMMER_ZERO_CROSS_PIN), callZeroCross, RISING);
     started = true;
   }
+  halfcycletime = 500000 / acFreq; // 1sec/freq/2 = 1000000usec/2/ freq
   Serial.println("Dimmer::begin finished");
 }
 
 void Dimmer::off() {
+  rampCounter = 0;
   lampState = false;
   }
 
 void Dimmer::on() {
+  rampCounter = 0;
   lampState = true;
   }
 
@@ -138,11 +140,11 @@ void Dimmer::setRampTime(double rampTime) {
 
 void Dimmer::update() {
   pwmtimer->update();
-//  triggertimer->update();
   }
 
 void ICACHE_RAM_ATTR Dimmer::zeroCross() {
   digitalWrite(triacPin, !TRIAC_NORMAL_STATE); // Reset Triac gate
+  pwmtimer->stop();  
   // can be called by zero crossing detector.
   if (operatingMode == DIMMER_COUNT) {
     /* Dimmer Count mode Use count mode to switch the load on and off only when the AC voltage crosses zero. In this
@@ -183,23 +185,17 @@ void ICACHE_RAM_ATTR Dimmer::zeroCross() {
     // Calculate triac time for the current cycle
     uint8_t value = getValue();
     if (value > 0 && lampState) {
-      uint16_t halfcycletime = 500000 / acFreq; // 1sec/freq/2 = 1000000usec/2/ freq
       triacTime = halfcycletime-(value*halfcycletime/100); // Wait time before triggering the Triac
       pwmtimer->interval(triacTime);
+      pwmtimer->start();
     }
     // Increment the ramp counter until it reaches the total number of cycles for the ramp
     if (operatingMode == DIMMER_RAMP && rampCounter < rampCycles) {
       rampCounter++;
     }
   }
-  pwmtimer->start();
-  }
+}
 
 void Dimmer::callTriac() {
   digitalWrite(triacPin, TRIAC_NORMAL_STATE); // Reset Triac gate
-  //triggertimer->start();
-  }
-
-void Dimmer::killTriac() {
-  digitalWrite(triacPin, !TRIAC_NORMAL_STATE); // Turn Triac off to start with
   }
