@@ -36,8 +36,7 @@
  * Possible operating modes for the dimmer library.
  */
 #define DIMMER_NORMAL 0
-#define DIMMER_RAMP   1
-#define DIMMER_COUNT  2
+#define DIMMER_COUNT  1
 
 /**
  * A dimmer channel.
@@ -61,7 +60,7 @@ class Dimmer {
      *
      * @see begin()
      */
-    Dimmer(uint8_t pin, uint8_t mode = DIMMER_NORMAL, double rampTime = 1.5, uint8_t freq = 50);
+    Dimmer(uint8_t pin, uint8_t mode = DIMMER_NORMAL, double rampTime = 0, uint8_t freq = 50);
 
     /**
      * Initializes the module.
@@ -118,7 +117,7 @@ class Dimmer {
     void setMinimum(uint8_t value);
 
     /**
-     * Sets tje time it takes for the value to rise from 0% to 100% in RAMP_MODE, in seconds.
+     * Sets the time it takes for the value to rise or fall to the desired value, in seconds.
      *
      * @param value the ramp time. Maximum is 2^16 / (2 * AC frequency)
      */
@@ -141,6 +140,7 @@ class Dimmer {
     uint8_t maxValue;
     uint8_t minValue;
     uint8_t rampStartValue;
+    uint8_t rampEndValue;
     uint16_t rampCounter;
     uint16_t rampCycles;
     uint8_t acFreq;

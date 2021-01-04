@@ -37,8 +37,7 @@ Dimmer::Dimmer(uint8_t pin, uint8_t mode, double rampTime, uint8_t freq) :
   lampValue(0),
   maxValue(100),
   rampStartValue(0),
-  rampCounter(1),
-  rampCycles(1),
+  rampEndValue(0),
   acFreq(freq),
   pulseCount(0),
   pulsesUsed(0),
@@ -49,10 +48,8 @@ Dimmer::Dimmer(uint8_t pin, uint8_t mode, double rampTime, uint8_t freq) :
       // Register dimmer object being created
       dimmerIndex = dimmerCount;
       dimmers[dimmerCount++] = this;
-    }
-    if (mode == DIMMER_RAMP) {
-      setRampTime(rampTime);
-    }
+      }
+    setRampTime(rampTime);
   }
 
 void Dimmer::begin(uint8_t value) {
@@ -76,16 +73,18 @@ void Dimmer::begin(uint8_t value) {
 
 void Dimmer::off() {
   rampCounter = 0;
-  lampValue = minValue;
+  rampEndValue = minValue;
+  rampStartValue = lampValue;
   }
 
 void Dimmer::on() {
   rampCounter = 0;
-  lampValue = maxValue;
+  rampEndValue = maxValue;
+  rampStartValue = lampValue;  
   }
-
+  
 void Dimmer::toggle() {
-  (lampValue == maxValue)?off():on();
+  (lampValue)?off():on();
   }
 
 bool Dimmer::getState() {
@@ -94,30 +93,27 @@ bool Dimmer::getState() {
   }
 
 uint8_t Dimmer::getValue() {
-  return rampStartValue + ((int32_t) lampValue - rampStartValue) * rampCounter / rampCycles;
+  return rampStartValue + ((int32_t) lampValue - rampStartValue) * (rampCounter / rampCycles);
   }
 
 void Dimmer::set(uint8_t value) {
   if (value > 100) {
     value = 100;
-  }
+    }
   if (value < minValue) {
     value = minValue;
-  }
-  if (value != lampValue) {
-    if (operatingMode == DIMMER_RAMP) {
-      rampStartValue = getValue();
-      rampCounter = 0;
-    } else if (operatingMode == DIMMER_COUNT) {
-      pulsesHigh = 0;
-      pulsesLow = 0;
-      pulseCount = 0;
-      pulsesUsed = 0;
+    }
+  maxValue = value;
+  rampEndValue = value;
+  rampStartValue = minValue;
+  rampCounter = 0;
+  if (operatingMode == DIMMER_COUNT) {
+    pulsesHigh = 0;
+    pulsesLow = 0;
+    pulseCount = 0;
+    pulsesUsed = 0;
     }
   }
-  maxValue = value;
-  lampValue = maxValue;
-}
 
 void Dimmer::setMinimum(uint8_t value) {
   if (value > 100) {
@@ -130,7 +126,7 @@ void Dimmer::setMinimum(uint8_t value) {
   }
 
 void Dimmer::setRampTime(double rampTime) {
-  rampTime = rampTime * 2 * acFreq;
+  rampTime = rampTime * 2 * acFreq;  // = keren dat de zero crossing in tijd moet worden doorlopen
   rampCycles = rampTime > 0xFFFF ? 0xFFFF : rampTime;
   rampCounter = rampCycles;
   }
@@ -177,17 +173,17 @@ void ICACHE_RAM_ATTR Dimmer::zeroCross() {
     if (pulsesUsed < 100) {
       pulsesUsed++;
     }
-
-  } else {
+  } 
+  else {
     // Calculate triac time for the current cycle
-    uint8_t value = getValue();
-    if (value) {
-      triacTime = halfcycletime-(value*halfcycletime/100); // Wait time before triggering the Triac
+    lampValue = getValue(); // getValue() => rampStartValue + ((int32_t) lampValue - rampStartValue) * rampCounter / rampCycles; 0 + (50-0 * 1) / 1 = 50
+    if (lampValue) {
+      triacTime = halfcycletime-(lampValue*halfcycletime/100); // Wait time before triggering the Triac
       pwmtimer->interval(triacTime);
       pwmtimer->start();
     }
     // Increment the ramp counter until it reaches the total number of cycles for the ramp
-    if (operatingMode == DIMMER_RAMP && rampCounter < rampCycles) {
+    if (rampCounter < rampCycles) {
       rampCounter++;
     }
   }

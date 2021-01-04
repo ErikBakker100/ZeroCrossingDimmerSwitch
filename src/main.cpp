@@ -6,7 +6,7 @@ const uint8_t GPIO4{4};
 const uint8_t TRIACPIN{12};
 bool status{false};
 OneButton Sw1(SW1, true);
-Dimmer dimmer(TRIACPIN, DIMMER_RAMP, 3, 50);
+Dimmer dimmer(TRIACPIN, DIMMER_NORMAL, 3, 50);
 void Handleswitch();
 
 void setup() {
