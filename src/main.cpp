@@ -6,7 +6,7 @@ const uint8_t GPIO4{4};
 const uint8_t TRIACPIN{12};
 bool status{false};
 OneButton Sw1(SW1, true);
-Dimmer dimmer(TRIACPIN, DIMMER_NORMAL, 3, 50);
+Dimmer dimmer(TRIACPIN, DIMMER_NORMAL, 0, 50);
 void Handleswitch();
 
 void setup() {
@@ -16,13 +16,14 @@ void setup() {
   Serial.println("\r\nInitialising");
   pinMode(Led1, OUTPUT);
   Sw1.attachClick([](){Handleswitch();});
-  dimmer.begin(50);
+  dimmer.begin(25);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
   Sw1.tick();
-//  dimmer.set(analogRead(A0)/10);
+  dimmer.set(analogRead(A0)/10);
+  Serial.println((uint8_t)dimmer.getValue());
   dimmer.update();
 }
 

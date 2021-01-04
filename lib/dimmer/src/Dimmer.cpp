@@ -80,7 +80,7 @@ void Dimmer::off() {
 void Dimmer::on() {
   rampCounter = 0;
   rampEndValue = maxValue;
-  rampStartValue = lampValue;  
+  rampStartValue = lampValue;
   }
   
 void Dimmer::toggle() {
@@ -93,7 +93,8 @@ bool Dimmer::getState() {
   }
 
 uint8_t Dimmer::getValue() {
-  return rampStartValue + ((int32_t) lampValue - rampStartValue) * (rampCounter / rampCycles);
+  if (rampStartValue < rampEndValue) return rampStartValue + ((int32_t) rampEndValue - rampStartValue) * ((float)rampCounter / rampCycles);
+  return rampStartValue - ((int32_t) rampStartValue - rampEndValue) * ((float)rampCounter / rampCycles);
   }
 
 void Dimmer::set(uint8_t value) {
@@ -106,7 +107,7 @@ void Dimmer::set(uint8_t value) {
   maxValue = value;
   rampEndValue = value;
   rampStartValue = minValue;
-  rampCounter = 0;
+  rampCounter = rampCycles;
   if (operatingMode == DIMMER_COUNT) {
     pulsesHigh = 0;
     pulsesLow = 0;
@@ -126,9 +127,9 @@ void Dimmer::setMinimum(uint8_t value) {
   }
 
 void Dimmer::setRampTime(double rampTime) {
-  rampTime = rampTime * 2 * acFreq;  // = keren dat de zero crossing in tijd moet worden doorlopen
+  rampTime = rampTime * 2 * acFreq + 1;  // = keren dat de zero crossing in tijd moet worden doorlopen
   rampCycles = rampTime > 0xFFFF ? 0xFFFF : rampTime;
-  rampCounter = rampCycles;
+  rampCounter = 0;
   }
 
 void Dimmer::update() {
@@ -176,7 +177,7 @@ void ICACHE_RAM_ATTR Dimmer::zeroCross() {
   } 
   else {
     // Calculate triac time for the current cycle
-    lampValue = getValue(); // getValue() => rampStartValue + ((int32_t) lampValue - rampStartValue) * rampCounter / rampCycles; 0 + (50-0 * 1) / 1 = 50
+    lampValue = getValue();
     if (lampValue) {
       triacTime = halfcycletime-(lampValue*halfcycletime/100); // Wait time before triggering the Triac
       pwmtimer->interval(triacTime);
