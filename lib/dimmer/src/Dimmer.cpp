@@ -61,36 +61,42 @@ void Dimmer::begin(uint8_t value) {
   pwmtimer = new Ticker(std::bind(&Dimmer::callTriac, this), 0, 1, MICROS_MICROS);
 
   if (!started) {
-    Serial.println("Dimmer::begin");
+//    Serial.println("Dimmer::begin");
     // Start zero cross circuit if not started yet
     pinMode(DIMMER_ZERO_CROSS_PIN, INPUT);
     attachInterrupt(digitalPinToInterrupt(DIMMER_ZERO_CROSS_PIN), callZeroCross, RISING);
     started = true;
   }
   halfcycletime = 500000 / acFreq; // 1sec/freq/2 = 1000000usec/2/ freq
-  Serial.println("Dimmer::begin finished");
+//  Serial.println("Dimmer::begin finished");
 }
 
 void Dimmer::off() {
   rampCounter = 0;
   rampEndValue = minValue;
-  rampStartValue = lampValue;
+  rampStartValue = maxValue;
+//  Serial.printf("Off : rampStartValue = %u, rampEndValue = %u, rampCycles = %u, lampValue = %u, minValue = %u, maxValue = %u\n", rampStartValue, rampEndValue, rampCycles, lampValue, minValue, maxValue);
   }
 
 void Dimmer::on() {
   rampCounter = 0;
   rampEndValue = maxValue;
-  rampStartValue = lampValue;
+  rampStartValue = minValue;
+//  Serial.printf("On : rampStartValue = %u, rampEndValue = %u, rampCycles = %u, lampValue = %u, minValue = %u, maxValue = %u\n", rampStartValue, rampEndValue, rampCycles, lampValue, minValue, maxValue);
   }
   
 void Dimmer::toggle() {
-  (lampValue)?off():on();
+  (lampValue>minValue)?off():on();
   }
 
 bool Dimmer::getState() {
   if (lampValue) return true;
   return false;
   }
+
+uint8_t Dimmer::value() {
+  return lampValue;
+}
 
 uint8_t Dimmer::getValue() {
   if (rampStartValue < rampEndValue) return rampStartValue + ((int32_t) rampEndValue - rampStartValue) * ((float)rampCounter / rampCycles);
@@ -101,13 +107,12 @@ void Dimmer::set(uint8_t value) {
   if (value > 100) {
     value = 100;
     }
-  if (value < minValue) {
-    value = minValue;
+  if (value > minValue) {
+    maxValue = value;
+    rampEndValue = maxValue;
+    rampStartValue = minValue;
+    rampCounter = 0;
     }
-  maxValue = value;
-  rampEndValue = value;
-  rampStartValue = minValue;
-  rampCounter = rampCycles;
   if (operatingMode == DIMMER_COUNT) {
     pulsesHigh = 0;
     pulsesLow = 0;

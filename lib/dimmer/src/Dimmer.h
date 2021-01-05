@@ -52,10 +52,9 @@ class Dimmer {
      * @param pin pin that activates the triac.
      * @param mode operating mode.
      *          Possible modes:
-     *          NORMAL_MODE: Uses timer to apply only a percentage of the AC power to the lamp every half cycle.
-     *          RAMP_MODE: Same as in normal mode, but it applies a ramp effect when changing levels. @see rampTime
+     *          NORMAL_MODE: Uses timer to apply only a percentage of the AC power to the lamp every half cycle. It applies a ramp effect when changing levels and time is bigger than 0 @see rampTime @see setRampTime().
      *          COUNT_MODE: Counts AC waves and applies full half cycles from time to time.
-     * @param rampTime time it takes for the value to rise from 0% to 100% in RAMP_MODE, in seconds. Default 1.5. @see setRampTime().
+     * @param rampTime time it takes for the value to rise from 0% to 100% in RAMP_MODE, in seconds. Default 1.5. 
      * @param freq AC frequency, in Hz. Supported values are 60Hz and 50Hz, use others at your own risk.
      *
      * @see begin()
@@ -92,7 +91,7 @@ class Dimmer {
      *
      * @return current lamp value, from 0 to 100.
      */
-    uint8_t getValue();
+    uint8_t value();
 
     /**
      * Gets the current state of the lamp.
@@ -150,9 +149,8 @@ class Dimmer {
     uint64_t pulsesHigh;
     uint64_t pulsesLow;    
     Ticker* pwmtimer{nullptr};
-
+    uint8_t getValue(); // calculate the current value based on the rampTime
     void zeroCross(); // function to start wait time as set by triacTimes
     void callTriac(); // trigger Triac
-
     friend void callZeroCross(); // triggered when zero crossing is detected
 };
