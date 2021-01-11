@@ -3,7 +3,11 @@
 
 #include <Arduino.h>
 #include <OneButton.h>
+#include <ESP8266WiFi.h>
 #include "Dimmer.h"
+#include "PubSubClient.h"
+#include "Json.h"
+#include "Receive.h"
 
 #ifndef DEBUGGING
 #define DEBUGGING(...) Serial.println( __VA_ARGS__ )
