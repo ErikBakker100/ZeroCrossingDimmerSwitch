@@ -1,5 +1,7 @@
 #include "init.h"
 
+#define DEBUG
+
 const uint8_t Led1{16};
 const int SW1{13};
 const uint8_t GPIO4{4};
@@ -58,7 +60,8 @@ void loop() {
     dimmer.set(remember/10); 
   Serial.println(remember);
   }
-*/  dimmer.update();
+  dimmer.update();
+  */
 }
 
 void Handleswitch() {

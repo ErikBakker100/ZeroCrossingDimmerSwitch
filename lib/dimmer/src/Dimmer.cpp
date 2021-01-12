@@ -25,10 +25,10 @@ void ICACHE_RAM_ATTR callZeroCross() {
   if(zerocrossiscalled) return; // If we have run this IRS before it must be a bounce
   zerocrossiscalled = true; // Remember that we have run this ISR before
   // Process each registered dimmer object
-  for (uint8_t i = 0; i < dimmerCount; i++) {
+/*  for (uint8_t i = 0; i < dimmerCount; i++) {
     dimmers[i]->zeroCross();
   }
-}
+*/}
 
 // Constructor
 Dimmer::Dimmer(uint8_t pin, uint8_t mode, double rampTime, uint8_t freq) :
