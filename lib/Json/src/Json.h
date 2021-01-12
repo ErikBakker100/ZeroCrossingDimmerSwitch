@@ -4,7 +4,7 @@
 #include <ArduinoJson.h>
 //#include <vector>
 
-static const int BUFFERSIZE{200}; // json default buffer size
+static const int BUFFERSIZE{350}; // json default buffer size
 
 class Json {
   public:
