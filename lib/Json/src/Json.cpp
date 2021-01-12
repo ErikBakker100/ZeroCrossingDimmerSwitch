@@ -8,16 +8,18 @@ Json::Json() {}
 String Json::switchlight(bool cmd)
 {
     String json_tekst;
+    StaticJsonDocument<1500> jsonBuffer;
     JsonObject root = jsonBuffer.createNestedObject();
     root["command"] = "switchlight";
     root["idx"] = idx;
     root["switchcmd"] = cmd?"On":"Off";
-    serializeJson(json_tekst, root);
+    serializeJson(root, json_tekst);
     return json_tekst;
 }
 
 String Json::udevice(uint16_t idx, const float nvalue, const std::vector<float>* svalue) {
     String json_tekst;
+    StaticJsonDocument<1500> jsonBuffer;
     JsonObject root = jsonBuffer.createNestedObject();
     root["command"] = "udevice";
     root["idx"] = idx;
@@ -28,7 +30,7 @@ String Json::udevice(uint16_t idx, const float nvalue, const std::vector<float>*
         temp += svalue->at(x);
         }
     root["svalue"] = temp;
-        serializeJson(json_tekst, root);
+        serializeJson(root, json_tekst);
     return json_tekst;
 }
 bool Json::readJson(String my_string) {
@@ -36,7 +38,7 @@ bool Json::readJson(String my_string) {
     nvalue = 0;
     svalue = 0;
     command = "";
-    DynamicJsonDocument jsonBuffer(BUFFERSIZE);
+    StaticJsonDocument<1500> jsonBuffer;
     my_string = my_string.substring(my_string.indexOf('{'));
     ;
     if (!deserializeJson(jsonBuffer, my_string)) {

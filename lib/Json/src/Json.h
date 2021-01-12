@@ -2,9 +2,9 @@
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
-#include <vector>
+//#include <vector>
 
-#define BUFFERSIZE 200 // json default buffer size
+static const int BUFFERSIZE{200}; // json default buffer size
 
 class Json {
   public:
@@ -26,7 +26,6 @@ class Json {
     String getcommand();
 
   private : 
-    DynamicJsonDocument jsonBuffer;
     uint16_t idx;
     float nvalue;
     float svalue;
