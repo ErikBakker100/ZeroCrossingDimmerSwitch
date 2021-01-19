@@ -20,8 +20,10 @@ class Json {
     String switchscene();
     String udevice(const uint16_t, const float, const std::vector<float>*);
     bool readJson(const String my_string);
+    bool readJson(unsigned char *my_string);
     float getnvalue();
-    std::vector<float> getsvalue();
+    float getsvalue();
+    float getsvalue1();
     uint16_t getidx();
     String getcommand();
 
@@ -29,5 +31,6 @@ class Json {
     uint16_t idx;
     float nvalue;
     float svalue;
+    float svalue1;
     String command;
 };

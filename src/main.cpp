@@ -31,7 +31,7 @@ const int mqtt_port{1883};
 // Initialise the WiFi and MQTT Client objects
 WiFiClient wifiClient;
 PubSubClient client(mqtt_server, mqtt_port, wifiClient);
-void callback(const char *, uint8_t *, unsigned int); // to call when something via MQTT has been received
+void callback(char *, unsigned char *, unsigned int); // to call when something via MQTT has been received
 void Connect(); // Declaration to function to Initialise WiFi and MQTT
 
 void setup() {
@@ -43,6 +43,7 @@ void setup() {
   Sw1.attachClick([](){Handleswitch();});
   dimmer.begin(25);
   dimmer.setMinimum(10);
+  client.setBufferSize(320);
   client.setServer(mqtt_server, mqtt_port);
   Serial.println("MQTT server set.");
   client.setCallback(callback);
@@ -54,8 +55,8 @@ void loop() {
   Connect(); // Check if all connections are OK before going on
   client.loop(); // See if any command is recieved from MQTT
 
-  Sw1.tick();
-/*  if (remember+5 <= analogRead(A0) || remember-5 >= analogRead(A0)){
+/*  Sw1.tick();
+  if (remember+5 <= analogRead(A0) || remember-5 >= analogRead(A0)){
     remember = analogRead(A0);
     dimmer.set(remember/10); 
   Serial.println(remember);
@@ -70,37 +71,28 @@ void Handleswitch() {
   dimmer.toggle();
 }
 
-void callback(const char *topic, uint8_t *payload, unsigned int length)
+void callback(char *topic, unsigned char *payload, unsigned int length)
 {
 #ifdef DEBUG
     Serial.print("Message arrived [");
     Serial.print(topic);
-    Serial.print("] ");
-#endif
-    String message;
-    for (unsigned int i = 0; i < length; i++)
-    {
-        message += (char)payload[i];
-    }
-#ifdef DEBUG
-    Serial.println(message);
-    Serial.println();
+    Serial.println("] ");
+    Serial.println((char*)payload);
 #endif
     Json json;
-    if (json.readJson(message))
+    if (json.readJson(payload))
     {
         Serial.print("IDX received : ");
         Serial.println(json.getidx());
         switch (json.getidx())
         {
             case idx_dimmer:
-            if (json.getcommand() == "getdeviceinfo")
-            {
-                decode();
-            }
+            Serial.println(json.getnvalue());
+            Serial.println(json.getsvalue1());
             break;
         }
     }
+    Serial.println();
 }
 
 void Connect()

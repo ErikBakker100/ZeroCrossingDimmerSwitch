@@ -34,15 +34,19 @@ String Json::udevice(uint16_t idx, const float nvalue, const std::vector<float>*
     return json_tekst;
 }
 bool Json::readJson(String my_string) {
+    return readJson(my_string.c_str());
+}
+
+bool Json::readJson(unsigned char *my_string) {
     idx = 0;
     nvalue = 0;
     svalue = 0;
     command = "";
-    StaticJsonDocument<1500> jsonBuffer;
-    my_string = my_string.substring(my_string.indexOf('{'));
-    ;
-    if (!deserializeJson(jsonBuffer, my_string)) {
-        Serial.println("json parseObject() failed");
+    StaticJsonDocument<JSON_OBJECT_SIZE(15)> jsonBuffer;
+    DeserializationError err = deserializeJson(jsonBuffer, my_string);
+    if (err) {
+        Serial.print("json parseObject() failed wih code ");
+        Serial.println(err.c_str());
         return false;
     }
     if (jsonBuffer.containsKey("command")) { 
@@ -52,6 +56,7 @@ bool Json::readJson(String my_string) {
     if (jsonBuffer.containsKey("idx")) idx = (uint16_t)jsonBuffer["idx"];
     if (jsonBuffer.containsKey("nvalue")) nvalue = (float)jsonBuffer["nvalue"];
     if (jsonBuffer.containsKey("svalue")) svalue = (float)jsonBuffer["svalue"];
+    if (jsonBuffer.containsKey("svalue1")) svalue1 = (float)jsonBuffer["svalue1"];
     return true;
 }
 
@@ -59,9 +64,12 @@ float Json::getnvalue() {
     return nvalue;
 }
 
-std::vector<float> Json::getsvalue() {
-    std::vector<float> svalue;
+float Json::getsvalue() {
     return svalue;
+}
+
+float Json::getsvalue1() {
+    return svalue1;
 }
 
 uint16_t Json::getidx() {
