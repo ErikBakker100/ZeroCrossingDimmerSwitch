@@ -14,11 +14,6 @@
 #define DIMMER_MAX_TRIAC 1
 
 /**
- * Time to trigger a Triac in micro seconds
- */
-#define DIMMER_TRIGGER 200
-
-/**
  * Triac control is either high (HIGH) or low (LOW) to turn Triac off, depends on hardware setup 
  */
 #define TRIAC_NORMAL_STATE LOW
@@ -30,7 +25,7 @@
  *
  * @see https://www.arduino.cc/en/Reference/attachInterrupt for more information.
  */
-#define DIMMER_ZERO_CROSS_PIN       4
+#define DIMMER_ZERO_CROSS_PIN 4
 
 /**
  * Possible operating modes for the dimmer library.
@@ -55,11 +50,11 @@ class Dimmer {
      *          NORMAL_MODE: Uses timer to apply only a percentage of the AC power to the lamp every half cycle. It applies a ramp effect when changing levels and time is bigger than 0 @see rampTime @see setRampTime().
      *          COUNT_MODE: Counts AC waves and applies full half cycles from time to time.
      * @param rampTime time it takes for the value to rise from 0% to 100% in RAMP_MODE, in seconds. Default 1.5. 
-     * @param freq AC frequency, in Hz. Supported values are 60Hz and 50Hz, use others at your own risk.
+     * @param freq AC frequency, in Hz (default 50Hz or 60Hz). Others not tested, so use other values with caution.
      *
      * @see begin()
      */
-    Dimmer(uint8_t pin, uint8_t mode = DIMMER_NORMAL, double rampTime = 0, uint8_t freq = 50);
+    Dimmer(uint8_t pin, uint8_t mode = DIMMER_NORMAL, double rampTime = 1.5, uint8_t freq = 50);
 
     /**
      * Initializes the module.

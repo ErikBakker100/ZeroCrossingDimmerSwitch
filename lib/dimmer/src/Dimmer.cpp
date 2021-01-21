@@ -1,8 +1,7 @@
 /** @file
  * This is a library to control the intensity of dimmable AC lamps or other AC loads using triacs.
  *
- * Copyright (c) 2015 Circuitar
- * This software is released under the MIT license. See the attached LICENSE file for details.
+ * Adapted from the original from 2015 Circuitar
  */
 
 #include "Arduino.h"
@@ -67,7 +66,6 @@ void Dimmer::begin(uint8_t value) {
     started = true;
   }
   halfcycletime = 500000 / acFreq; // 1sec/freq/2 = 1000000usec/2/ freq
-//  Serial.println("Dimmer::begin finished");
 }
 
 void Dimmer::off() {
@@ -137,7 +135,7 @@ void Dimmer::update() {
   pwmtimer->update();
   }
 
-void ICACHE_RAM_ATTR Dimmer::zeroCross() {
+void Dimmer::zeroCross() {
   digitalWrite(triacPin, !TRIAC_NORMAL_STATE); // Reset Triac gate
   pwmtimer->stop();  
   // can be called by zero crossing detector.
@@ -149,8 +147,8 @@ void ICACHE_RAM_ATTR Dimmer::zeroCross() {
       * any triac switching noise on the line.
       */
    // Remove MSB from buffer and decrement pulse count accordingly
-    if (pulseCount > 0 && (pulsesHigh & (1ULL << 35))) {
-      pulsesHigh &= ~(1ULL << 35);
+    if (pulseCount > 0 && (pulsesHigh & (1ULL << 35))) { // If left bit of pulsesHigh == 1
+      pulsesHigh &= ~(1ULL << 35); // ~ (NOT) Unary complement (bit inversion) Set the left bit of pulsesHigh to 0
       if (pulseCount > 0) {
         pulseCount--;
       }
@@ -164,8 +162,8 @@ void ICACHE_RAM_ATTR Dimmer::zeroCross() {
 
     // Turn next half cycle on if number of pulses is low within the used buffer
     if (lampValue > ((uint16_t)(pulseCount) * 100 / (pulsesUsed))) {  
-      // Turn dimmer on at zero crossing time, @10 ticks (500us)
-      triacTime = 10;
+      // Turn dimmer on at zero crossing time
+      digitalWrite(triacPin, TRIAC_NORMAL_STATE);
       pulsesLow++;
       pulseCount++;
     }
