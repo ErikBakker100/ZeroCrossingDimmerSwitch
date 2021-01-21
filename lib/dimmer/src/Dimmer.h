@@ -47,8 +47,8 @@ class Dimmer {
      * @param pin pin that activates the triac.
      * @param mode operating mode.
      *          Possible modes:
-     *          NORMAL_MODE: Uses timer to apply only a percentage of the AC power to the lamp every half cycle. It applies a ramp effect when changing levels and time is bigger than 0 @see rampTime @see setRampTime().
-     *          COUNT_MODE: Counts AC waves and applies full half cycles from time to time.
+     *          DIMMER_NORMAL: Uses timer to apply only a percentage of the AC power to the lamp every half cycle. It applies a ramp effect when changing levels and time is bigger than 0 @see rampTime @see setRampTime().
+     *          DIMMER_COUNT: Counts AC waves and applies full half cycles from time to time.
      * @param rampTime time it takes for the value to rise from 0% to 100% in RAMP_MODE, in seconds. Default 1.5. 
      * @param freq AC frequency, in Hz (default 50Hz or 60Hz). Others not tested, so use other values with caution.
      *
