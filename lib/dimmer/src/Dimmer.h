@@ -123,13 +123,20 @@ class Dimmer {
     void setRampTime(double rampTime);
 
     /**
-     * 
-     * Updates the timers, and call function when finisched
-     * 
+     * Updates the timers, must be called continuously from main loop
      */
-    void update(); // check timers
+    void update();
+
+    /**
+     * If other processes may not be interrupted, call this to disable the interrupt service routine to update the load.
+     */
     void disableinterrupt();
+
+    /**
+     * Call this routine to enable the interrupt service routine to update the load. Only needed when disableinterrupt() has been called before. 
+     */
     void enableinterrupt();
+
   private:
     static bool started;
     uint8_t dimmerIndex;
@@ -154,5 +161,4 @@ class Dimmer {
     void zeroCross(); // function to start wait time as set by triacTimes
     void callTriac(); // trigger Triac
     friend void callZeroCross(); // triggered when zero crossing is detected
-
 };

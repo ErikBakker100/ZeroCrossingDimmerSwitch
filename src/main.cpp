@@ -8,7 +8,7 @@ const uint8_t GPIO4{4};
 const uint8_t TRIACPIN{12};
 bool status{false};
 OneButton Sw1(SW1, true);
-Dimmer dimmer(TRIACPIN, DIMMER_NORMAL, 2, 50);
+Dimmer dimmer(TRIACPIN, DIMMER_NORMAL, 1.5, 50);
 void Handleswitch();
 
 // Make sure to update this for your own WiFi network!
@@ -67,7 +67,6 @@ void Handleswitch() {
 
 void callback(char *topic, unsigned char *payload, unsigned int length)
 {
-    dimmer.disableinterrupt();
 #ifdef DEBUG
     Serial.print("Message arrived [");
     Serial.print(topic);
@@ -92,7 +91,6 @@ void callback(char *topic, unsigned char *payload, unsigned int length)
             break;
         }
     }
-    dimmer.enableinterrupt();
 }
 
 void Connect()
