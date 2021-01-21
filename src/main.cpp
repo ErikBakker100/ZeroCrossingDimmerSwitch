@@ -1,6 +1,6 @@
 #include "init.h"
 
-#define DEBUG
+//#define DEBUG
 
 const uint8_t Led1{16};
 const int SW1{13};
@@ -43,6 +43,7 @@ void setup() {
   Sw1.attachClick([](){Handleswitch();});
   dimmer.begin(25);
   dimmer.setMinimum(10);
+  dimmer.off();
   client.setBufferSize(320);
   client.setServer(mqtt_server, mqtt_port);
   Serial.println("MQTT server set.");
@@ -54,15 +55,8 @@ void loop() {
   // put your main code here, to run repeatedly:
   Connect(); // Check if all connections are OK before going on
   client.loop(); // See if any command is recieved from MQTT
-
-/*  Sw1.tick();
-  if (remember+5 <= analogRead(A0) || remember-5 >= analogRead(A0)){
-    remember = analogRead(A0);
-    dimmer.set(remember/10); 
-  Serial.println(remember);
-  }
+  Sw1.tick();
   dimmer.update();
-  */
 }
 
 void Handleswitch() {
@@ -73,6 +67,7 @@ void Handleswitch() {
 
 void callback(char *topic, unsigned char *payload, unsigned int length)
 {
+    dimmer.disableinterrupt();
 #ifdef DEBUG
     Serial.print("Message arrived [");
     Serial.print(topic);
@@ -82,23 +77,29 @@ void callback(char *topic, unsigned char *payload, unsigned int length)
     Json json;
     if (json.readJson(payload))
     {
-        Serial.print("IDX received : ");
-        Serial.println(json.getidx());
         switch (json.getidx())
         {
             case idx_dimmer:
-            Serial.println(json.getnvalue());
-            Serial.println(json.getsvalue1());
+                Serial.print("IDX received : ");
+                Serial.println(json.getidx());
+                if (json.getnvalue()) {
+                    dimmer.set(json.getsvalue1());
+                }
+                else {
+                    Serial.println("off");
+                    dimmer.off();
+                }
             break;
         }
     }
-    Serial.println();
+    dimmer.enableinterrupt();
 }
 
 void Connect()
 {
     if (WiFi.status() != WL_CONNECTED)
     {
+        dimmer.disableinterrupt();
         Serial.print("Connecting to ");
         Serial.println(ssid);
         // Connect to the WiFi
@@ -117,9 +118,11 @@ void Connect()
         Serial.print("Signaal sterkte (RSSI): ");
         Serial.print(rssi);
         Serial.println(" dBm");
+        dimmer.enableinterrupt();
     }
     if (!client.connected())
     {
+        dimmer.disableinterrupt();
         Serial.print("connecting to MQTT :");
         while (!client.connect(clientID, mqtt_username, mqtt_password))
         {
@@ -133,5 +136,6 @@ void Connect()
         }
         Serial.print("Listening to topic : ");
         Serial.println(mqtt_topic_out);
+        dimmer.enableinterrupt();
     }
 }

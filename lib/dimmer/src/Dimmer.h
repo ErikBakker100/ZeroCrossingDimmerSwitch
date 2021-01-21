@@ -128,7 +128,8 @@ class Dimmer {
      * 
      */
     void update(); // check timers
-
+    void disableinterrupt();
+    void enableinterrupt();
   private:
     static bool started;
     uint8_t dimmerIndex;
@@ -153,4 +154,5 @@ class Dimmer {
     void zeroCross(); // function to start wait time as set by triacTimes
     void callTriac(); // trigger Triac
     friend void callZeroCross(); // triggered when zero crossing is detected
+
 };

@@ -25,10 +25,10 @@ void ICACHE_RAM_ATTR callZeroCross() {
   if(zerocrossiscalled) return; // If we have run this IRS before it must be a bounce
   zerocrossiscalled = true; // Remember that we have run this ISR before
   // Process each registered dimmer object
-/*  for (uint8_t i = 0; i < dimmerCount; i++) {
+  for (uint8_t i = 0; i < dimmerCount; i++) {
     dimmers[i]->zeroCross();
   }
-*/}
+}
 
 // Constructor
 Dimmer::Dimmer(uint8_t pin, uint8_t mode, double rampTime, uint8_t freq) :
@@ -61,10 +61,9 @@ void Dimmer::begin(uint8_t value) {
   pwmtimer = new Ticker(std::bind(&Dimmer::callTriac, this), 0, 1, MICROS_MICROS);
 
   if (!started) {
-//    Serial.println("Dimmer::begin");
     // Start zero cross circuit if not started yet
     pinMode(DIMMER_ZERO_CROSS_PIN, INPUT);
-    attachInterrupt(digitalPinToInterrupt(DIMMER_ZERO_CROSS_PIN), callZeroCross, RISING);
+    enableinterrupt();
     started = true;
   }
   halfcycletime = 500000 / acFreq; // 1sec/freq/2 = 1000000usec/2/ freq
@@ -104,15 +103,12 @@ uint8_t Dimmer::getValue() {
   }
 
 void Dimmer::set(uint8_t value) {
-  if (value > 100) {
-    value = 100;
-    }
-  if (value > minValue) {
-    maxValue = value;
-    rampEndValue = maxValue;
-    rampStartValue = minValue;
-    rampCounter = 0;
-    }
+  if (value > 100) value = 100;
+  if (value < minValue) value = minValue;
+  rampStartValue = getValue(); // We start from the current brightness
+  maxValue = value; // We have a new max value
+  rampEndValue = maxValue; // We should end with the new maxvalue
+  rampCounter = 0;
   if (operatingMode == DIMMER_COUNT) {
     pulsesHigh = 0;
     pulsesLow = 0;
@@ -159,7 +155,6 @@ void ICACHE_RAM_ATTR Dimmer::zeroCross() {
         pulseCount--;
       }
     }
-
     // Shift 100-bit buffer to the right
     pulsesHigh <<= 1;
     if (pulsesLow & (1ULL << 63)) {
@@ -198,3 +193,11 @@ void ICACHE_RAM_ATTR Dimmer::zeroCross() {
 void Dimmer::callTriac() {
   digitalWrite(triacPin, TRIAC_NORMAL_STATE); // Reset Triac gate
   }
+
+void Dimmer::disableinterrupt(){
+  detachInterrupt(digitalPinToInterrupt(DIMMER_ZERO_CROSS_PIN));
+}
+
+void Dimmer::enableinterrupt(){
+  attachInterrupt(digitalPinToInterrupt(DIMMER_ZERO_CROSS_PIN), callZeroCross, RISING);
+}
