@@ -4,7 +4,7 @@
 // for example : {"command": "switchlight", "idx": 2450, "switchcmd": "On" }
 
 Json::Json() {}
-
+/*
 String Json::switchlight(bool cmd)
 {
     String json_tekst;
@@ -33,6 +33,7 @@ String Json::udevice(uint16_t idx, const float nvalue, const std::vector<float>*
         serializeJson(root, json_tekst);
     return json_tekst;
 }
+*/
 bool Json::readJson(String my_string) {
     return readJson(my_string.c_str());
 }
@@ -42,7 +43,7 @@ bool Json::readJson(unsigned char *my_string) {
     nvalue = 0;
     svalue = 0;
     command = "";
-    StaticJsonDocument<JSON_OBJECT_SIZE(15)> jsonBuffer;
+    StaticJsonDocument<JSON_OBJECT_SIZE(20)> jsonBuffer;
     DeserializationError err = deserializeJson(jsonBuffer, my_string);
     if (err) {
         Serial.print("json parseObject() failed wih code ");

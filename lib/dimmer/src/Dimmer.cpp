@@ -72,14 +72,12 @@ void Dimmer::off() {
   rampCounter = 0;
   rampEndValue = minValue;
   rampStartValue = maxValue;
-//  Serial.printf("Off : rampStartValue = %u, rampEndValue = %u, rampCycles = %u, lampValue = %u, minValue = %u, maxValue = %u\n", rampStartValue, rampEndValue, rampCycles, lampValue, minValue, maxValue);
   }
 
 void Dimmer::on() {
   rampCounter = 0;
   rampEndValue = maxValue;
   rampStartValue = minValue;
-//  Serial.printf("On : rampStartValue = %u, rampEndValue = %u, rampCycles = %u, lampValue = %u, minValue = %u, maxValue = %u\n", rampStartValue, rampEndValue, rampCycles, lampValue, minValue, maxValue);
   }
   
 void Dimmer::toggle() {
@@ -111,7 +109,7 @@ void Dimmer::set(uint8_t value) {
     pulsesHigh = 0;
     pulsesLow = 0;
     pulseCount = 0;
-    pulsesUsed = 0;
+    pulsesUsed = 1;
     }
   }
 
@@ -137,8 +135,7 @@ void Dimmer::update() {
 
 void Dimmer::zeroCross() {
   digitalWrite(triacPin, !TRIAC_NORMAL_STATE); // Reset Triac gate
-  pwmtimer->stop();  
-  // can be called by zero crossing detector.
+  lampValue = getValue();
   if (operatingMode == DIMMER_COUNT) {
     /* Dimmer Count mode Use count mode to switch the load on and off only when the AC voltage crosses zero. In this
       * mode, the power is controlled by turning the triac on only for complete (half) cycles of the AC
@@ -147,11 +144,10 @@ void Dimmer::zeroCross() {
       * any triac switching noise on the line.
       */
    // Remove MSB from buffer and decrement pulse count accordingly
-    if (pulseCount > 0 && (pulsesHigh & (1ULL << 35))) { // If left bit of pulsesHigh == 1
+   // pulsesHigh (MSB) = 36 bits, pulsesLow = 64 bits (LSB) = total 100 bits 
+    if (pulseCount > 0 && (pulsesHigh & (1ULL << 35))) { // If left 100th bit of buffer pulsesHigh == 1
       pulsesHigh &= ~(1ULL << 35); // ~ (NOT) Unary complement (bit inversion) Set the left bit of pulsesHigh to 0
-      if (pulseCount > 0) {
-        pulseCount--;
-      }
+      pulseCount--;
     }
     // Shift 100-bit buffer to the right
     pulsesHigh <<= 1;
@@ -159,11 +155,10 @@ void Dimmer::zeroCross() {
       pulsesHigh++;
     }
     pulsesLow <<= 1;
-
     // Turn next half cycle on if number of pulses is low within the used buffer
-    if (lampValue > ((uint16_t)(pulseCount) * 100 / (pulsesUsed))) {  
+    if (lampValue > ((pulseCount * 100) / pulsesUsed)) {  
       // Turn dimmer on at zero crossing time
-      digitalWrite(triacPin, TRIAC_NORMAL_STATE);
+      callTriac();
       pulsesLow++;
       pulseCount++;
     }
@@ -172,24 +167,25 @@ void Dimmer::zeroCross() {
     if (pulsesUsed < 100) {
       pulsesUsed++;
     }
+    else {
+      pulsesUsed = 1;
+      pulseCount = 0;
+    }
   } 
   else {
-    // Calculate triac time for the current cycle
-    lampValue = getValue();
-    if (lampValue) {
-      triacTime = halfcycletime-(lampValue*halfcycletime/100); // Wait time before triggering the Triac
-      pwmtimer->interval(triacTime);
-      pwmtimer->start();
-    }
-    // Increment the ramp counter until it reaches the total number of cycles for the ramp
-    if (rampCounter < rampCycles) {
-      rampCounter++;
-    }
+    pwmtimer->stop();  
+    triacTime = halfcycletime-(lampValue*halfcycletime/100); // Wait time before triggering the Triac
+    pwmtimer->interval(triacTime);
+    pwmtimer->start();
+  }
+  // Increment the ramp counter until it reaches the total number of cycles for the ramp
+  if (rampCounter < rampCycles) {
+    rampCounter++;
   }
 }
 
 void Dimmer::callTriac() {
-  digitalWrite(triacPin, TRIAC_NORMAL_STATE); // Reset Triac gate
+  digitalWrite(triacPin, TRIAC_NORMAL_STATE);
   }
 
 void Dimmer::disableinterrupt(){

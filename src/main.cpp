@@ -9,6 +9,7 @@ const uint8_t TRIACPIN{12};
 bool status{false};
 OneButton Sw1(SW1, true);
 Dimmer dimmer(TRIACPIN, DIMMER_COUNT);
+//Dimmer dimmer(TRIACPIN, DIMMER_NORMAL);
 void Handleswitch();
 
 // Make sure to update this for your own WiFi network!
@@ -79,13 +80,12 @@ void callback(char *topic, unsigned char *payload, unsigned int length)
         switch (json.getidx())
         {
             case idx_dimmer:
-                Serial.print("IDX received : ");
-                Serial.println(json.getidx());
+                Serial.printf("IDX : %d, nvalue: %d, value1 : ", json.getidx(), json.getnvalue());
+                Serial.println(json.getsvalue1());
                 if (json.getnvalue()) {
                     dimmer.set(json.getsvalue1());
                 }
                 else {
-                    Serial.println("off");
                     dimmer.off();
                 }
             break;
