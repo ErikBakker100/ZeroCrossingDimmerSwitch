@@ -33,15 +33,7 @@ void ICACHE_RAM_ATTR callZeroCross() {
 Dimmer::Dimmer(uint8_t pin, uint8_t mode, double rampTime, uint8_t freq) :
   triacPin(pin),
   operatingMode(mode),
-  lampValue(0),
-  maxValue(100),
-  rampStartValue(0),
-  rampEndValue(0),
-  acFreq(freq),
-  pulseCount(0),
-  pulsesUsed(0),
-  pulsesHigh(0),
-  pulsesLow(0)
+  acFreq(freq)
  {
     if (dimmerCount < DIMMER_MAX_TRIAC) {
       // Register dimmer object being created
@@ -49,16 +41,15 @@ Dimmer::Dimmer(uint8_t pin, uint8_t mode, double rampTime, uint8_t freq) :
       dimmers[dimmerCount++] = this;
       }
     setRampTime(rampTime);
+    // Initialize triac pin
+    pinMode(triacPin, OUTPUT);
+    digitalWrite(triacPin, TRIAC_NORMAL_STATE); // Turn Triac off to start with
+    pwmtimer = new Ticker(std::bind(&Dimmer::callTriac, this), 0, 1, MICROS_MICROS);
   }
 
 void Dimmer::begin(uint8_t value) {
-  // Initialize triac pin
-  pinMode(triacPin, OUTPUT);
-  digitalWrite(triacPin, TRIAC_NORMAL_STATE); // Turn Triac off to start with
   // Initialize lamp state and value
   set(value);
-  pwmtimer = new Ticker(std::bind(&Dimmer::callTriac, this), 0, 1, MICROS_MICROS);
-
   if (!started) {
     // Start zero cross circuit if not started yet
     pinMode(DIMMER_ZERO_CROSS_PIN, INPUT);
@@ -106,10 +97,7 @@ void Dimmer::set(uint8_t value) {
   rampEndValue = maxValue; // We should end with the new maxvalue
   rampCounter = 0;
   if (operatingMode == DIMMER_COUNT) {
-    pulsesHigh = 0;
-    pulsesLow = 0;
     pulseCount = 0;
-    pulsesUsed = 1;
     }
   }
 
@@ -143,35 +131,17 @@ void Dimmer::zeroCross() {
       * This helps controlling higher, slower response loads (e.g. resistances) without introducing
       * any triac switching noise on the line.
       */
-   // Remove MSB from buffer and decrement pulse count accordingly
-   // pulsesHigh (MSB) = 36 bits, pulsesLow = 64 bits (LSB) = total 100 bits 
-    if (pulseCount > 0 && (pulsesHigh & (1ULL << 35))) { // If left 100th bit of buffer pulsesHigh == 1
-      pulsesHigh &= ~(1ULL << 35); // ~ (NOT) Unary complement (bit inversion) Set the left bit of pulsesHigh to 0
-      pulseCount--;
-    }
-    // Shift 100-bit buffer to the right
-    pulsesHigh <<= 1;
-    if (pulsesLow & (1ULL << 63)) {
-      pulsesHigh++;
-    }
-    pulsesLow <<= 1;
-    // Turn next half cycle on if number of pulses is low within the used buffer
-    if (lampValue > ((pulseCount * 100) / pulsesUsed)) {  
+    zcCounter++;
+    if (lampValue > ((float)pulseCount*100 / zcCounter)) {
       // Turn dimmer on at zero crossing time
       callTriac();
-      pulsesLow++;
       pulseCount++;
     }
-
-    // Update number of bits used in the buffer
-    if (pulsesUsed < 100) {
-      pulsesUsed++;
-    }
-    else {
-      pulsesUsed = 1;
+    if (zcCounter > 99) {
+      zcCounter = 0;
       pulseCount = 0;
     }
-  } 
+  }
   else {
     pwmtimer->stop();  
     triacTime = halfcycletime-(lampValue*halfcycletime/100); // Wait time before triggering the Triac
@@ -179,9 +149,7 @@ void Dimmer::zeroCross() {
     pwmtimer->start();
   }
   // Increment the ramp counter until it reaches the total number of cycles for the ramp
-  if (rampCounter < rampCycles) {
-    rampCounter++;
-  }
+  if (rampCounter < rampCycles) rampCounter++;
 }
 
 void Dimmer::callTriac() {

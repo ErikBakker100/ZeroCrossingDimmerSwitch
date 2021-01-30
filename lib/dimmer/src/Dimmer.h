@@ -138,19 +138,17 @@ class Dimmer {
     uint8_t triacPin;
     uint16_t triacTime;
     uint8_t operatingMode;
-    uint8_t lampValue;
-    uint8_t maxValue;
-    uint8_t minValue;
-    uint8_t rampStartValue;
-    uint8_t rampEndValue;
-    uint16_t rampCounter;
-    uint16_t rampCycles;
+    uint8_t lampValue{0};
+    uint8_t maxValue{100};
+    uint8_t minValue{0};
+    uint8_t rampStartValue{0};
+    uint8_t rampEndValue{0};
+    uint16_t rampCounter; // Where are we within the total available crossings set by setRampTime() 
+    uint16_t rampCycles; // Amount of zero crossings available within the given setRampTime()
     uint8_t acFreq;
     uint16_t halfcycletime;
-    uint8_t pulseCount; // Amount of zero crossings
-    uint8_t pulsesUsed;
-    uint64_t pulsesHigh;
-    uint64_t pulsesLow;    
+    uint16_t pulseCount{0}; // Total of pulses given
+    uint16_t zcCounter{0}; // Zero Cross Counter. Counts repeatedly till 100. Used in DIMMER_COUNT, to calculate the percentage
     Ticker* pwmtimer{nullptr};
     uint8_t getValue(); // calculate the current value based on the rampTime
     void zeroCross(); // function to start wait time as set by triacTimes

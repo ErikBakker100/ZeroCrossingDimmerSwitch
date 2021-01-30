@@ -42,9 +42,8 @@ void setup() {
   Serial.println("\r\nInitialising");
   pinMode(Led1, OUTPUT);
   Sw1.attachClick([](){Handleswitch();});
-  dimmer.begin(25);
-  dimmer.setMinimum(10);
-  dimmer.off();
+  dimmer.begin(0);
+  dimmer.setMinimum(0);
   client.setBufferSize(320);
   client.setServer(mqtt_server, mqtt_port);
   Serial.println("MQTT server set.");
