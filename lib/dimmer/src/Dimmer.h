@@ -54,7 +54,7 @@ class Dimmer {
      *
      * @see begin()
      */
-    Dimmer(uint8_t pin, uint8_t mode = DIMMER_NORMAL, double rampTime = 1.5, uint8_t freq = 50);
+    Dimmer(uint8_t pin, uint8_t mode = DIMMER_NORMAL, double rampTime = 0, uint8_t freq = 50);
 
     /**
      * Initializes the module.

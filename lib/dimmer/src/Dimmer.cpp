@@ -137,7 +137,7 @@ void Dimmer::zeroCross() {
       callTriac();
       pulseCount++;
     }
-    if (zcCounter > 99) {
+    if (zcCounter > (99 + (lampValue/zcCounter))) {
       zcCounter = 0;
       pulseCount = 0;
     }
